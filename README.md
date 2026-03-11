@@ -9,16 +9,6 @@
 
 ---
 
-## 🎬 Demo
-
-![Training Reward](docs/reward_curve.png)
-![Terminal Match](docs/match_output.png)
-![Strategy Heatmap](docs/strategy_heatmap.png)
-
-*Training reward graph, terminal match output, and strategy visualization.*
-
----
-
 ## 🎯 Project Highlights
 
 A complete RL-powered cricket simulator demonstrating:
