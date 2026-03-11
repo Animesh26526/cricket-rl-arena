@@ -23,11 +23,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 
+from agents.bowler_agent import BowlerAgent
+from agents.dqn_agent import DQNAgent
+from agents.q_learning_agent import QLearningAgent
 from environment.cricket_env import CricketEnv
 from environment.multi_agent_env import MultiAgentCricketEnv
-from agents.q_learning_agent import QLearningAgent
-from agents.dqn_agent import DQNAgent
-from agents.bowler_agent import BowlerAgent
 from utils import logger as match_logger
 
 TOTAL_BALLS_MAP = {"T20": 120, "ODI": 300, "Test": 450}

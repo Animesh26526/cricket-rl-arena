@@ -25,8 +25,8 @@ Usage
     # training loop identical to QLearningAgent except .update() signature
 """
 
-import random
 import pickle
+import random
 from collections import deque
 from pathlib import Path
 from typing import List, Optional, Tuple

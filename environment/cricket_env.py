@@ -32,13 +32,13 @@ Reward function
 import random
 from typing import Dict, List, Optional, Tuple
 
-from models.player import Player
+from environment.drs_system import DRSSystem
 from environment.probability_engine import (
-    ProbabilityEngine,
     ALL_DELIVERIES,
     DISMISSAL_TYPES,
+    ProbabilityEngine,
 )
-from environment.drs_system import DRSSystem
+from models.player import Player
 
 REWARD_PER_RUN = 1.0
 REWARD_FOUR_BONUS = 1.0

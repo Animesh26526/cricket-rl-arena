@@ -38,10 +38,10 @@ import seaborn as sns
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from agents.dqn_agent import DQNAgent
+from agents.q_learning_agent import QLearningAgent
 from environment.cricket_env import CricketEnv
 from environment.probability_engine import ALL_DELIVERIES
-from agents.q_learning_agent import QLearningAgent
-from agents.dqn_agent import DQNAgent
 
 CHECKPOINT_DIR = Path(__file__).resolve().parents[1] / "training" / "checkpoints"
 PLOT_DIR = Path(__file__).resolve().parent / "plots"

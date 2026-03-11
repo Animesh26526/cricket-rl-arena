@@ -5,7 +5,8 @@ Defines the Team class, which manages players, bowlers, and innings state.
 """
 
 from __future__ import annotations
-from typing import List, Optional, TYPE_CHECKING
+
+from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
     from models.player import Player

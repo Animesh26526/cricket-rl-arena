@@ -1,33 +1,32 @@
 # Interactive entry point for cricket matches (human vs human or human vs AI).
 
-import sys
 import random
-from time import sleep
+import sys
 from pathlib import Path
+from time import sleep
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from typing import List
 
-from models.player import Player
-from models.team import Team
+from agents.dqn_agent import DQNAgent
+from agents.q_learning_agent import QLearningAgent
+from environment.drs_system import DRSSystem
 from environment.probability_engine import (
-    ProbabilityEngine,
     ALL_DELIVERIES,
     FAST_DELIVERIES,
     SPIN_DELIVERIES,
+    ProbabilityEngine,
 )
-from environment.drs_system import DRSSystem
+from models.player import Player
+from models.team import Team
 from utils.helpers import (
+    format_overs,
     get_int_input,
     get_str_input,
     parse_runs,
     short_form_result,
-    format_overs,
 )
-
-from agents.q_learning_agent import QLearningAgent
-from agents.dqn_agent import DQNAgent
 
 DISMISSAL_TYPES = {
     "L.B.W",

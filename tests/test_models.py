@@ -4,8 +4,8 @@ tests/test_models.py
 Unit tests for Player and Team models.
 """
 
-import unittest
 import sys
+import unittest
 from pathlib import Path
 
 # Add parent directory to path

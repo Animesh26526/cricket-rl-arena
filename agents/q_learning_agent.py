@@ -12,8 +12,8 @@ Q-table shape:
    5 rrr_bins × 4 crr_bins × 5 pressure_bins)  × n_actions
 """
 
-import random
 import pickle
+import random
 from pathlib import Path
 from typing import List, Tuple
 

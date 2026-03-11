@@ -5,6 +5,7 @@ Shared utility functions used across the project.
 """
 
 from __future__ import annotations
+
 import random
 from typing import List
 

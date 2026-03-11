@@ -26,9 +26,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import numpy as np
 
+from agents.q_learning_agent import QLearningAgent
 from environment.cricket_env import CricketEnv
 from environment.probability_engine import ALL_DELIVERIES
-from agents.q_learning_agent import QLearningAgent
 
 # ---------------------------------------------------------------------------
 # Default paths
