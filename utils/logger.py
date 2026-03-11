@@ -32,7 +32,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-LOG_DIR  = Path(__file__).resolve().parents[1] / "logs"
+LOG_DIR = Path(__file__).resolve().parents[1] / "logs"
 LOG_FILE = LOG_DIR / "match_history.json"
 
 
@@ -66,16 +66,17 @@ def _next_match_id() -> int:
 # Public API
 # ---------------------------------------------------------------------------
 
+
 def log_innings(
-    match_format:  str,
-    innings:       int,
-    score:         int,
-    wickets:       int,
-    balls_played:  int,
-    players:       Optional[List[Any]] = None,   # List[Player]
-    agent_type:    str = "Unknown",
-    match_id:      Optional[int] = None,
-    extra:         Optional[Dict] = None,
+    match_format: str,
+    innings: int,
+    score: int,
+    wickets: int,
+    balls_played: int,
+    players: Optional[List[Any]] = None,  # List[Player]
+    agent_type: str = "Unknown",
+    match_id: Optional[int] = None,
+    extra: Optional[Dict] = None,
 ) -> int:
     """
     Append an innings record to the log file.
@@ -92,40 +93,40 @@ def log_innings(
     if match_id is None:
         match_id = _next_match_id()
 
-    overs    = round(balls_played / 6, 2)
+    overs = round(balls_played / 6, 2)
     run_rate = round(score / overs, 2) if overs > 0 else 0.0
 
-    top_scorer        = ""
-    top_scorer_runs   = 0
-    top_wicket_taker  = ""
+    top_scorer = ""
+    top_scorer_runs = 0
+    top_wicket_taker = ""
     top_wickets_count = 0
 
     if players:
-        by_runs   = max(players, key=lambda p: p.runs,    default=None)
-        by_wkts   = max(players, key=lambda p: p.wickets, default=None)
+        by_runs = max(players, key=lambda p: p.runs, default=None)
+        by_wkts = max(players, key=lambda p: p.wickets, default=None)
         if by_runs:
-            top_scorer      = by_runs.name
+            top_scorer = by_runs.name
             top_scorer_runs = by_runs.runs
         if by_wkts and by_wkts.wickets > 0:
-            top_wicket_taker  = by_wkts.name
+            top_wicket_taker = by_wkts.name
             top_wickets_count = by_wkts.wickets
 
     record = {
-        "match_id":          match_id,
-        "timestamp":         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "format":            match_format,
-        "innings":           innings,
-        "team_score":        score,
-        "wickets":           wickets,
-        "balls_played":      balls_played,
-        "overs":             overs,
-        "run_rate":          run_rate,
-        "top_scorer":        top_scorer,
-        "top_scorer_runs":   top_scorer_runs,
-        "top_wicket_taker":  top_wicket_taker,
-        "top_wickets":       top_wickets_count,
-        "agent_type":        agent_type,
-        "extra":             extra or {},
+        "match_id": match_id,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "format": match_format,
+        "innings": innings,
+        "team_score": score,
+        "wickets": wickets,
+        "balls_played": balls_played,
+        "overs": overs,
+        "run_rate": run_rate,
+        "top_scorer": top_scorer,
+        "top_scorer_runs": top_scorer_runs,
+        "top_wicket_taker": top_wicket_taker,
+        "top_wickets": top_wickets_count,
+        "agent_type": agent_type,
+        "extra": extra or {},
     }
 
     records = _load_records()
@@ -135,23 +136,25 @@ def log_innings(
 
 
 def log_match_result(
-    match_id:     int,
-    winner:       str,
-    margin:       str,
+    match_id: int,
+    winner: str,
+    margin: str,
     match_format: str,
-    agent_type:   str = "Unknown",
+    agent_type: str = "Unknown",
 ) -> None:
     """Append a lightweight match-result record (summary only)."""
     records = _load_records()
-    records.append({
-        "match_id":    match_id,
-        "timestamp":   datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "record_type": "match_result",
-        "format":      match_format,
-        "winner":      winner,
-        "margin":      margin,
-        "agent_type":  agent_type,
-    })
+    records.append(
+        {
+            "match_id": match_id,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "record_type": "match_result",
+            "format": match_format,
+            "winner": winner,
+            "margin": margin,
+            "agent_type": agent_type,
+        }
+    )
     _save_records(records)
 
 
@@ -169,14 +172,14 @@ def summarise_logs() -> Dict:
     records = [r for r in _load_records() if "team_score" in r]
     if not records:
         return {}
-    scores    = [r["team_score"] for r in records]
-    wickets   = [r["wickets"]    for r in records]
-    run_rates = [r["run_rate"]   for r in records]
+    scores = [r["team_score"] for r in records]
+    wickets = [r["wickets"] for r in records]
+    run_rates = [r["run_rate"] for r in records]
     return {
-        "total_innings":  len(records),
-        "avg_score":      round(sum(scores)    / len(scores),    2),
-        "avg_wickets":    round(sum(wickets)   / len(wickets),   2),
-        "avg_run_rate":   round(sum(run_rates) / len(run_rates), 2),
-        "highest_score":  max(scores),
-        "lowest_score":   min(scores),
+        "total_innings": len(records),
+        "avg_score": round(sum(scores) / len(scores), 2),
+        "avg_wickets": round(sum(wickets) / len(wickets), 2),
+        "avg_run_rate": round(sum(run_rates) / len(run_rates), 2),
+        "highest_score": max(scores),
+        "lowest_score": min(scores),
     }

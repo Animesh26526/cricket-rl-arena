@@ -26,7 +26,8 @@ from collections import defaultdict
 from typing import Dict, List
 
 import matplotlib
-matplotlib.use("Agg")          # no display needed
+
+matplotlib.use("Agg")  # no display needed
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
@@ -40,18 +41,19 @@ from agents.q_learning_agent import QLearningAgent
 from agents.dqn_agent import DQNAgent
 
 CHECKPOINT_DIR = Path(__file__).resolve().parents[1] / "training" / "checkpoints"
-PLOT_DIR       = Path(__file__).resolve().parent / "plots"
-TOTAL_BALLS    = {"T20": 120, "ODI": 300, "Test": 450}
+PLOT_DIR = Path(__file__).resolve().parent / "plots"
+TOTAL_BALLS = {"T20": 120, "ODI": 300, "Test": 450}
 
 
 # ---------------------------------------------------------------------------
 # Helper: run greedy episodes and collect shot data
 # ---------------------------------------------------------------------------
 
+
 def collect_shot_data(
     agent,
     match_format: str,
-    n_episodes:   int,
+    n_episodes: int,
 ) -> Dict:
     """
     Run `n_episodes` greedy innings and collect (delivery, shot, reward) tuples.
@@ -59,19 +61,23 @@ def collect_shot_data(
     """
     total_balls = TOTAL_BALLS.get(match_format, 120)
     env = CricketEnv(total_balls=total_balls, match_format=match_format)
-    shot_counts: Dict[str, Dict[str, int]]   = defaultdict(lambda: defaultdict(int))
+    shot_counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
     shot_rewards: Dict[str, Dict[str, list]] = defaultdict(lambda: defaultdict(list))
 
     for _ in range(n_episodes):
         state = env.reset()
-        done  = False
+        done = False
         while not done:
-            avail    = env.get_available_actions()
-            action   = agent.greedy_action(state, avail)
-            shot     = env.available_shots[action] if action < len(env.available_shots) else "Unknown"
+            avail = env.get_available_actions()
+            action = agent.greedy_action(state, avail)
+            shot = (
+                env.available_shots[action]
+                if action < len(env.available_shots)
+                else "Unknown"
+            )
             delivery = env.delivery
             state, reward, done, _ = env.step(action)
-            shot_counts[delivery][shot]   += 1
+            shot_counts[delivery][shot] += 1
             shot_rewards[delivery][shot].append(reward)
 
     return {"counts": dict(shot_counts), "rewards": dict(shot_rewards)}
@@ -80,6 +86,7 @@ def collect_shot_data(
 # ---------------------------------------------------------------------------
 # Plot 1: Q-value heatmap  (delivery × shot)
 # ---------------------------------------------------------------------------
+
 
 def plot_shot_delivery_heatmap(data: Dict, save_path: Path) -> None:
     counts = data["counts"]
@@ -98,17 +105,20 @@ def plot_shot_delivery_heatmap(data: Dict, save_path: Path) -> None:
         ax=ax,
         xticklabels=all_shots_seen,
         yticklabels=ALL_DELIVERIES,
-        annot=True, fmt=".0f",
+        annot=True,
+        fmt=".0f",
         cmap="YlOrRd",
         linewidths=0.4,
         linecolor="#cccccc",
         cbar_kws={"label": "Shot frequency (%)"},
     )
-    ax.set_title("Shot Selection Heatmap — Frequency (%) per Delivery", fontsize=13, pad=12)
+    ax.set_title(
+        "Shot Selection Heatmap — Frequency (%) per Delivery", fontsize=13, pad=12
+    )
     ax.set_xlabel("Shot")
     ax.set_ylabel("Delivery")
     plt.xticks(rotation=40, ha="right", fontsize=8)
-    plt.yticks(rotation=0,  fontsize=9)
+    plt.yticks(rotation=0, fontsize=9)
     plt.tight_layout()
     plt.savefig(save_path, dpi=150)
     plt.close()
@@ -119,16 +129,19 @@ def plot_shot_delivery_heatmap(data: Dict, save_path: Path) -> None:
 # Plot 2: Preferred shots bar chart
 # ---------------------------------------------------------------------------
 
+
 def plot_preferred_shots_bar(data: Dict, save_path: Path) -> None:
-    counts    = data["counts"]
+    counts = data["counts"]
     deliveries = ALL_DELIVERIES
-    top_shots  = []
-    top_pcts   = []
+    top_shots = []
+    top_pcts = []
 
     for d in deliveries:
         sc = counts.get(d, {})
         if not sc:
-            top_shots.append("N/A"); top_pcts.append(0); continue
+            top_shots.append("N/A")
+            top_pcts.append(0)
+            continue
         best = max(sc, key=sc.get)
         total = sum(sc.values()) or 1
         top_shots.append(best)
@@ -142,8 +155,13 @@ def plot_preferred_shots_bar(data: Dict, save_path: Path) -> None:
     fig, ax = plt.subplots(figsize=(12, 6))
     bars = ax.barh(deliveries, top_pcts, color=colours, edgecolor="white", height=0.65)
     for bar, shot, pct in zip(bars, top_shots, top_pcts):
-        ax.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height()/2,
-                f"{shot} ({pct:.0f}%)", va="center", fontsize=8)
+        ax.text(
+            bar.get_width() + 0.5,
+            bar.get_y() + bar.get_height() / 2,
+            f"{shot} ({pct:.0f}%)",
+            va="center",
+            fontsize=8,
+        )
 
     ax.set_xlim(0, 110)
     ax.set_xlabel("Preferred Shot Frequency (%)")
@@ -160,14 +178,20 @@ def plot_preferred_shots_bar(data: Dict, save_path: Path) -> None:
 # Plot 3: Pressure vs shot-aggression heatmap
 # ---------------------------------------------------------------------------
 
+
 def plot_pressure_heatmap(agent, match_format: str, save_path: Path) -> None:
     """
     Show how shot selection changes as RRR increases.
     Simulate innings with increasing target pressures.
     """
     total_balls = TOTAL_BALLS.get(match_format, 120)
-    rrr_bands   = [(0, 6, "RRR 0-6"), (6, 9, "RRR 6-9"), (9, 12, "RRR 9-12"), (12, 36, "RRR 12+")]
-    n_episodes  = 300
+    rrr_bands = [
+        (0, 6, "RRR 0-6"),
+        (6, 9, "RRR 6-9"),
+        (9, 12, "RRR 9-12"),
+        (12, 36, "RRR 12+"),
+    ]
+    n_episodes = 300
 
     # Run episodes with various targets to hit different RRR windows
     targets = [70, 100, 130, 170]
@@ -175,19 +199,27 @@ def plot_pressure_heatmap(agent, match_format: str, save_path: Path) -> None:
     band_shot_counts: List[Dict] = [{} for _ in rrr_bands]
 
     for t_idx, target in enumerate(targets):
-        env = CricketEnv(total_balls=total_balls, match_format=match_format, target=target)
+        env = CricketEnv(
+            total_balls=total_balls, match_format=match_format, target=target
+        )
         for _ in range(n_episodes):
             state = env.reset()
-            done  = False
+            done = False
             while not done:
-                avail  = env.get_available_actions()
+                avail = env.get_available_actions()
                 action = agent.greedy_action(state, avail)
-                shot   = env.available_shots[action] if action < len(env.available_shots) else "Unknown"
+                shot = (
+                    env.available_shots[action]
+                    if action < len(env.available_shots)
+                    else "Unknown"
+                )
 
                 # Which RRR band are we in?
                 rrr = state[6]
                 band_idx = min(t_idx, len(rrr_bands) - 1)
-                band_shot_counts[band_idx][shot] = band_shot_counts[band_idx].get(shot, 0) + 1
+                band_shot_counts[band_idx][shot] = (
+                    band_shot_counts[band_idx].get(shot, 0) + 1
+                )
                 all_shots_seen.add(shot)
                 state, _, done, _ = env.step(action)
 
@@ -200,10 +232,12 @@ def plot_pressure_heatmap(agent, match_format: str, save_path: Path) -> None:
 
     fig, ax = plt.subplots(figsize=(max(8, len(all_shots_seen) * 0.9), 4))
     sns.heatmap(
-        matrix, ax=ax,
+        matrix,
+        ax=ax,
         xticklabels=all_shots_seen,
         yticklabels=[b[2] for b in rrr_bands],
-        annot=True, fmt=".0f",
+        annot=True,
+        fmt=".0f",
         cmap="Blues",
         linewidths=0.4,
         cbar_kws={"label": "Shot frequency (%)"},
@@ -222,6 +256,7 @@ def plot_pressure_heatmap(agent, match_format: str, save_path: Path) -> None:
 # Print strategy table to console
 # ---------------------------------------------------------------------------
 
+
 def print_strategy_table(data: Dict) -> None:
     counts = data["counts"]
     print("\n  STRATEGY TABLE — Best Shot per Delivery")
@@ -232,9 +267,9 @@ def print_strategy_table(data: Dict) -> None:
         sc = counts.get(delivery, {})
         if not sc:
             continue
-        best  = max(sc, key=sc.get)
+        best = max(sc, key=sc.get)
         total = sum(sc.values()) or 1
-        pct   = sc[best] / total * 100
+        pct = sc[best] / total * 100
         print(f"  {delivery:<22} {best:<22} {pct:>5.1f}%")
     print()
 
@@ -243,17 +278,20 @@ def print_strategy_table(data: Dict) -> None:
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def _parse():
     p = argparse.ArgumentParser()
-    p.add_argument("--model",    type=str, default=None)
-    p.add_argument("--agent",    type=str, default="qlearning", choices=["qlearning","dqn"])
-    p.add_argument("--format",   type=str, default="T20", choices=["T20","ODI","Test"])
+    p.add_argument("--model", type=str, default=None)
+    p.add_argument(
+        "--agent", type=str, default="qlearning", choices=["qlearning", "dqn"]
+    )
+    p.add_argument("--format", type=str, default="T20", choices=["T20", "ODI", "Test"])
     p.add_argument("--episodes", type=int, default=1_000)
     return p.parse_args()
 
 
 if __name__ == "__main__":
-    args  = _parse()
+    args = _parse()
     PLOT_DIR.mkdir(parents=True, exist_ok=True)
 
     if args.model:
@@ -268,7 +306,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     AgentCls = QLearningAgent if args.agent == "qlearning" else DQNAgent
-    agent    = AgentCls.load(str(model_path))
+    agent = AgentCls.load(str(model_path))
     agent.epsilon = 0.0
 
     print(f"[Visualizer] Collecting data from {args.episodes} greedy episodes ...")
@@ -276,7 +314,7 @@ if __name__ == "__main__":
 
     print_strategy_table(data)
     plot_shot_delivery_heatmap(data, PLOT_DIR / "shot_delivery_heatmap.png")
-    plot_preferred_shots_bar(  data, PLOT_DIR / "preferred_shots_bar.png")
+    plot_preferred_shots_bar(data, PLOT_DIR / "preferred_shots_bar.png")
     plot_pressure_heatmap(agent, args.format, PLOT_DIR / "pressure_heatmap.png")
 
     print(f"\n[Visualizer] All plots saved to {PLOT_DIR}/")

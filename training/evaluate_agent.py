@@ -35,7 +35,7 @@ from agents.q_learning_agent import QLearningAgent
 # ---------------------------------------------------------------------------
 
 CHECKPOINT_DIR = Path(__file__).resolve().parent / "checkpoints"
-DEFAULT_MODEL  = CHECKPOINT_DIR / "q_agent_best.pkl"
+DEFAULT_MODEL = CHECKPOINT_DIR / "q_agent_best.pkl"
 
 TOTAL_BALLS_MAP = {"T20": 120, "ODI": 300, "Test": 450}
 
@@ -43,6 +43,7 @@ TOTAL_BALLS_MAP = {"T20": 120, "ODI": 300, "Test": 450}
 # ---------------------------------------------------------------------------
 # Evaluation helpers
 # ---------------------------------------------------------------------------
+
 
 def run_evaluation(
     agent: QLearningAgent,
@@ -58,14 +59,18 @@ def run_evaluation(
 
     for _ in range(episodes):
         state = env.reset()
-        done  = False
+        done = False
         ep_reward = 0.0
 
         while not done:
             available = env.get_available_actions()
-            action    = agent.greedy_action(state, available)
-            shot      = env.available_shots[action] if action < len(env.available_shots) else "Unknown"
-            delivery  = env.delivery
+            action = agent.greedy_action(state, available)
+            shot = (
+                env.available_shots[action]
+                if action < len(env.available_shots)
+                else "Unknown"
+            )
+            delivery = env.delivery
 
             state, reward, done, info = env.step(action)
             ep_reward += reward
@@ -76,13 +81,13 @@ def run_evaluation(
         rewards.append(ep_reward)
 
     return {
-        "episodes":     episodes,
-        "avg_score":    float(np.mean(scores)),
-        "std_score":    float(np.std(scores)),
-        "avg_wickets":  float(np.mean(wickets_list)),
-        "avg_reward":   float(np.mean(rewards)),
-        "shot_counts":  dict(shot_counts),
-        "scores":       scores,
+        "episodes": episodes,
+        "avg_score": float(np.mean(scores)),
+        "std_score": float(np.std(scores)),
+        "avg_wickets": float(np.mean(wickets_list)),
+        "avg_reward": float(np.mean(rewards)),
+        "shot_counts": dict(shot_counts),
+        "scores": scores,
     }
 
 
@@ -90,7 +95,9 @@ def print_summary(stats: Dict, match_format: str) -> None:
     """Print a nicely formatted evaluation summary."""
     width = 62
     print("\n" + "=" * width)
-    print(f"  AGENT EVALUATION  |  Format: {match_format}  |  Episodes: {stats['episodes']}")
+    print(
+        f"  AGENT EVALUATION  |  Format: {match_format}  |  Episodes: {stats['episodes']}"
+    )
     print("=" * width)
     print(f"  Avg Score   : {stats['avg_score']:.1f}  (σ = {stats['std_score']:.1f})")
     print(f"  Avg Wickets : {stats['avg_wickets']:.2f}")
@@ -138,7 +145,7 @@ def score_histogram(scores, bins=10) -> None:
         lo = min_s + i * bin_width
         hi = lo + bin_width
         count = bucket_counts.get(i, 0)
-        bar   = "█" * int(count / max_count * bar_max)
+        bar = "█" * int(count / max_count * bar_max)
         print(f"  {lo:>4}-{hi:<4} | {bar:<{bar_max}} {count}")
     print()
 
@@ -147,17 +154,34 @@ def score_histogram(scores, bins=10) -> None:
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Evaluate a trained cricket agent.")
-    parser.add_argument("--model",    type=str,  default=str(DEFAULT_MODEL),
-                        help="Path to saved agent pickle")
-    parser.add_argument("--episodes", type=int,  default=500,
-                        help="Number of evaluation episodes (default: 500)")
-    parser.add_argument("--format",   type=str,  default="T20",
-                        choices=["T20", "ODI", "Test"],
-                        help="Match format (default: T20)")
-    parser.add_argument("--top",      type=int,  default=3,
-                        help="Top N shots to show per delivery (default: 3)")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default=str(DEFAULT_MODEL),
+        help="Path to saved agent pickle",
+    )
+    parser.add_argument(
+        "--episodes",
+        type=int,
+        default=500,
+        help="Number of evaluation episodes (default: 500)",
+    )
+    parser.add_argument(
+        "--format",
+        type=str,
+        default="T20",
+        choices=["T20", "ODI", "Test"],
+        help="Match format (default: T20)",
+    )
+    parser.add_argument(
+        "--top",
+        type=int,
+        default=3,
+        help="Top N shots to show per delivery (default: 3)",
+    )
     return parser.parse_args()
 
 

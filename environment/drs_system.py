@@ -26,7 +26,9 @@ class DRSSystem:
     # Public API
     # ------------------------------------------------------------------
 
-    def review(self, dismissal_type: str, shot: str, verbose: bool = False) -> Tuple[str, bool]:
+    def review(
+        self, dismissal_type: str, shot: str, verbose: bool = False
+    ) -> Tuple[str, bool]:
         """
         Simulate a DRS review.
 
@@ -109,7 +111,9 @@ class DRSSystem:
             print(f"UltraEdge: {edge}")
             print(f"Pitching: {pitching}  Impact: {impact}  Wickets: {wickets}")
 
-        hitting_inline = pitching == "In Line" and impact == "In Line" and wickets == "Hitting"
+        hitting_inline = (
+            pitching == "In Line" and impact == "In Line" and wickets == "Hitting"
+        )
         hitting_leave = (
             pitching == "Outside Off"
             and impact == "Outside"

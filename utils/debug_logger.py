@@ -18,8 +18,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # Configure logging format
 LOG_FORMAT = logging.Formatter(
-    LOGGING_CONFIG["log_format"],
-    datefmt="%Y-%m-%d %H:%M:%S"
+    LOGGING_CONFIG["log_format"], datefmt="%Y-%m-%d %H:%M:%S"
 )
 
 # Root logger setup

@@ -114,6 +114,7 @@ STATE_BOUNDS = {
     "required_rr": (0, 36),
 }
 
+
 def get_max_overs(match_format: str) -> int:
     """Get maximum overs for a given match format."""
     format_upper = match_format.upper()
@@ -125,6 +126,7 @@ def get_max_overs(match_format: str) -> int:
         return float("inf")
     else:
         raise ValueError(f"Unknown match format: {match_format}")
+
 
 def get_powerplay_overs(match_format: str) -> int:
     """Get powerplay overs for a given match format."""

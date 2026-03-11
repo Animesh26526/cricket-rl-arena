@@ -33,12 +33,11 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # State normalisation constants (per-feature min/max for [0,1] scaling)
 # ---------------------------------------------------------------------------
-STATE_MIN = np.array([0., 0., 0.,   0.,  0.,  0.,  0.], dtype=np.float32)
-STATE_MAX = np.array([10., 1., 10., 300., 500., 36., 36.], dtype=np.float32)
+STATE_MIN = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+STATE_MAX = np.array([10.0, 1.0, 10.0, 300.0, 500.0, 36.0, 36.0], dtype=np.float32)
 
 
 def normalise_state(state: List[float]) -> np.ndarray:
@@ -51,8 +50,10 @@ def normalise_state(state: List[float]) -> np.ndarray:
 # Tiny neural-net layer helpers (pure NumPy)
 # ---------------------------------------------------------------------------
 
+
 def relu(x: np.ndarray) -> np.ndarray:
     return np.maximum(0.0, x)
+
 
 def relu_grad(x: np.ndarray) -> np.ndarray:
     return (x > 0).astype(np.float32)
@@ -62,6 +63,7 @@ def relu_grad(x: np.ndarray) -> np.ndarray:
 # Experience Replay Buffer
 # ---------------------------------------------------------------------------
 
+
 class ReplayBuffer:
     """Circular buffer that stores (s, a, r, s', done) transitions."""
 
@@ -70,11 +72,11 @@ class ReplayBuffer:
 
     def push(
         self,
-        state:      np.ndarray,
-        action:     int,
-        reward:     float,
+        state: np.ndarray,
+        action: int,
+        reward: float,
         next_state: np.ndarray,
-        done:       bool,
+        done: bool,
     ) -> None:
         self._buf.append((state, action, float(reward), next_state, done))
 
@@ -83,10 +85,10 @@ class ReplayBuffer:
         states, actions, rewards, next_states, dones = zip(*batch)
         return (
             np.vstack(states).astype(np.float32),
-            np.array(actions,  dtype=np.int32),
-            np.array(rewards,  dtype=np.float32),
+            np.array(actions, dtype=np.int32),
+            np.array(rewards, dtype=np.float32),
             np.vstack(next_states).astype(np.float32),
-            np.array(dones,    dtype=np.float32),
+            np.array(dones, dtype=np.float32),
         )
 
     def __len__(self) -> int:
@@ -96,6 +98,7 @@ class ReplayBuffer:
 # ---------------------------------------------------------------------------
 # QNetwork (two hidden layers, pure NumPy)
 # ---------------------------------------------------------------------------
+
 
 class QNetwork:
     """
@@ -109,15 +112,18 @@ class QNetwork:
 
     def __init__(self, state_size: int, n_actions: int, lr: float = 1e-3):
         self.lr = lr
+
         # Xavier initialisation
         def xavier(fan_in, fan_out):
             limit = np.sqrt(6.0 / (fan_in + fan_out))
-            return np.random.uniform(-limit, limit, (fan_in, fan_out)).astype(np.float32)
+            return np.random.uniform(-limit, limit, (fan_in, fan_out)).astype(
+                np.float32
+            )
 
         self.W1 = xavier(state_size, 128)
         self.b1 = np.zeros((1, 128), dtype=np.float32)
         self.W2 = xavier(128, 64)
-        self.b2 = np.zeros((1, 64),  dtype=np.float32)
+        self.b2 = np.zeros((1, 64), dtype=np.float32)
         self.W3 = xavier(64, n_actions)
         self.b3 = np.zeros((1, n_actions), dtype=np.float32)
 
@@ -131,11 +137,11 @@ class QNetwork:
 
     def forward(self, X: np.ndarray) -> Tuple[np.ndarray, dict]:
         """Forward pass; returns Q-values and cache for backward."""
-        z1 = X  @ self.W1 + self.b1
+        z1 = X @ self.W1 + self.b1
         a1 = relu(z1)
         z2 = a1 @ self.W2 + self.b2
         a2 = relu(z2)
-        q  = a2 @ self.W3 + self.b3
+        q = a2 @ self.W3 + self.b3
         cache = {"X": X, "z1": z1, "a1": a1, "z2": z2, "a2": a2, "q": q}
         return q, cache
 
@@ -146,9 +152,9 @@ class QNetwork:
 
     def train_step(
         self,
-        states:      np.ndarray,
-        actions:     np.ndarray,
-        targets:     np.ndarray,
+        states: np.ndarray,
+        actions: np.ndarray,
+        targets: np.ndarray,
     ) -> float:
         """
         One mini-batch SGD step.
@@ -168,7 +174,7 @@ class QNetwork:
         loss = float(np.mean(errors[batch_idx, actions] ** 2))
 
         # Backprop
-        dq  = errors / len(actions)
+        dq = errors / len(actions)
         dW3 = cache["a2"].T @ dq
         db3 = dq.sum(axis=0, keepdims=True)
 
@@ -192,9 +198,9 @@ class QNetwork:
         params = self._params()
         for i, (p, g) in enumerate(zip(params, grads)):
             self._m[i] = beta1 * self._m[i] + (1 - beta1) * g
-            self._v[i] = beta2 * self._v[i] + (1 - beta2) * g ** 2
-            m_hat = self._m[i] / (1 - beta1 ** self._t)
-            v_hat = self._v[i] / (1 - beta2 ** self._t)
+            self._v[i] = beta2 * self._v[i] + (1 - beta2) * g**2
+            m_hat = self._m[i] / (1 - beta1**self._t)
+            v_hat = self._v[i] / (1 - beta2**self._t)
             p -= self.lr * m_hat / (np.sqrt(v_hat) + eps)
 
     def copy_weights_from(self, other: "QNetwork") -> None:
@@ -210,6 +216,7 @@ class QNetwork:
 # ---------------------------------------------------------------------------
 # DQN Agent
 # ---------------------------------------------------------------------------
+
 
 class DQNAgent:
     """
@@ -231,37 +238,37 @@ class DQNAgent:
 
     def __init__(
         self,
-        state_size:      int   = 7,
-        n_actions:       int   = 14,
-        lr:              float = 1e-3,
-        gamma:           float = 0.95,
-        epsilon:         float = 1.0,
-        epsilon_min:     float = 0.05,
-        epsilon_decay:   float = 0.9995,
-        buffer_capacity: int   = 50_000,
-        batch_size:      int   = 64,
-        target_update:   int   = 500,
+        state_size: int = 7,
+        n_actions: int = 14,
+        lr: float = 1e-3,
+        gamma: float = 0.95,
+        epsilon: float = 1.0,
+        epsilon_min: float = 0.05,
+        epsilon_decay: float = 0.9995,
+        buffer_capacity: int = 50_000,
+        batch_size: int = 64,
+        target_update: int = 500,
     ):
-        self.state_size    = state_size
-        self.n_actions     = n_actions
-        self.gamma         = gamma
-        self.epsilon       = epsilon
-        self.epsilon_min   = epsilon_min
+        self.state_size = state_size
+        self.n_actions = n_actions
+        self.gamma = gamma
+        self.epsilon = epsilon
+        self.epsilon_min = epsilon_min
         self.epsilon_decay = epsilon_decay
-        self.batch_size    = batch_size
+        self.batch_size = batch_size
         self.target_update = target_update
 
-        self.online_net  = QNetwork(state_size, n_actions, lr)
-        self.target_net  = QNetwork(state_size, n_actions, lr)
+        self.online_net = QNetwork(state_size, n_actions, lr)
+        self.target_net = QNetwork(state_size, n_actions, lr)
         self.target_net.copy_weights_from(self.online_net)
 
         self.replay = ReplayBuffer(buffer_capacity)
 
-        self.total_steps   = 0
-        self.total_reward  = 0.0
+        self.total_steps = 0
+        self.total_reward = 0.0
         self.losses: List[float] = []
         self._step_counter = 0
-        self.train_every   = 4   # only run backprop every N env steps (speed optimisation)
+        self.train_every = 4  # only run backprop every N env steps (speed optimisation)
 
     # ------------------------------------------------------------------
     # Action selection
@@ -290,27 +297,32 @@ class DQNAgent:
 
     def update(
         self,
-        state:          List[float],
-        action:         int,
-        reward:         float,
-        next_state:     List[float],
-        done:           bool,
+        state: List[float],
+        action: int,
+        reward: float,
+        next_state: List[float],
+        done: bool,
         available_next: List[int],
     ) -> Optional[float]:
-        s  = normalise_state(state)
+        s = normalise_state(state)
         s2 = normalise_state(next_state)
 
         self.replay.push(s, action, reward, s2, done)
-        self.total_steps  += 1
+        self.total_steps += 1
         self.total_reward += reward
         self._decay_epsilon()
 
         self._step_counter += 1
-        if len(self.replay) < self.batch_size or self._step_counter % self.train_every != 0:
+        if (
+            len(self.replay) < self.batch_size
+            or self._step_counter % self.train_every != 0
+        ):
             return None
 
         # Sample mini-batch
-        states, actions, rewards, next_states, dones = self.replay.sample(self.batch_size)
+        states, actions, rewards, next_states, dones = self.replay.sample(
+            self.batch_size
+        )
 
         # Compute targets with target network
         q_next, _ = self.target_net.forward(next_states)
@@ -333,39 +345,57 @@ class DQNAgent:
     def save(self, path: str) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         with open(path, "wb") as f:
-            pickle.dump({
-                "online_W1": self.online_net.W1, "online_b1": self.online_net.b1,
-                "online_W2": self.online_net.W2, "online_b2": self.online_net.b2,
-                "online_W3": self.online_net.W3, "online_b3": self.online_net.b3,
-                "target_W1": self.target_net.W1, "target_b1": self.target_net.b1,
-                "target_W2": self.target_net.W2, "target_b2": self.target_net.b2,
-                "target_W3": self.target_net.W3, "target_b3": self.target_net.b3,
-                "epsilon":       self.epsilon,
-                "total_steps":   self.total_steps,
-                "total_reward":  self.total_reward,
-                "n_actions":     self.n_actions,
-                "state_size":    self.state_size,
-                "gamma":         self.gamma,
-                "batch_size":    self.batch_size,
-                "target_update": self.target_update,
-            }, f)
+            pickle.dump(
+                {
+                    "online_W1": self.online_net.W1,
+                    "online_b1": self.online_net.b1,
+                    "online_W2": self.online_net.W2,
+                    "online_b2": self.online_net.b2,
+                    "online_W3": self.online_net.W3,
+                    "online_b3": self.online_net.b3,
+                    "target_W1": self.target_net.W1,
+                    "target_b1": self.target_net.b1,
+                    "target_W2": self.target_net.W2,
+                    "target_b2": self.target_net.b2,
+                    "target_W3": self.target_net.W3,
+                    "target_b3": self.target_net.b3,
+                    "epsilon": self.epsilon,
+                    "total_steps": self.total_steps,
+                    "total_reward": self.total_reward,
+                    "n_actions": self.n_actions,
+                    "state_size": self.state_size,
+                    "gamma": self.gamma,
+                    "batch_size": self.batch_size,
+                    "target_update": self.target_update,
+                },
+                f,
+            )
         print(f"[DQNAgent] Saved → {path}")
 
     @classmethod
     def load(cls, path: str) -> "DQNAgent":
         with open(path, "rb") as f:
             d = pickle.load(f)
-        agent = cls(state_size=d["state_size"], n_actions=d["n_actions"],
-                    gamma=d["gamma"], batch_size=d["batch_size"],
-                    target_update=d["target_update"])
-        for net, prefix in ((agent.online_net,"online"), (agent.target_net,"target")):
-            net.W1[:] = d[f"{prefix}_W1"]; net.b1[:] = d[f"{prefix}_b1"]
-            net.W2[:] = d[f"{prefix}_W2"]; net.b2[:] = d[f"{prefix}_b2"]
-            net.W3[:] = d[f"{prefix}_W3"]; net.b3[:] = d[f"{prefix}_b3"]
-        agent.epsilon      = d["epsilon"]
-        agent.total_steps  = d["total_steps"]
+        agent = cls(
+            state_size=d["state_size"],
+            n_actions=d["n_actions"],
+            gamma=d["gamma"],
+            batch_size=d["batch_size"],
+            target_update=d["target_update"],
+        )
+        for net, prefix in ((agent.online_net, "online"), (agent.target_net, "target")):
+            net.W1[:] = d[f"{prefix}_W1"]
+            net.b1[:] = d[f"{prefix}_b1"]
+            net.W2[:] = d[f"{prefix}_W2"]
+            net.b2[:] = d[f"{prefix}_b2"]
+            net.W3[:] = d[f"{prefix}_W3"]
+            net.b3[:] = d[f"{prefix}_b3"]
+        agent.epsilon = d["epsilon"]
+        agent.total_steps = d["total_steps"]
         agent.total_reward = d["total_reward"]
-        print(f"[DQNAgent] Loaded ← {path}  (ε={agent.epsilon:.4f}, steps={agent.total_steps})")
+        print(
+            f"[DQNAgent] Loaded ← {path}  (ε={agent.epsilon:.4f}, steps={agent.total_steps})"
+        )
         return agent
 
     def _decay_epsilon(self):

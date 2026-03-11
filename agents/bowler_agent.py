@@ -20,21 +20,20 @@ from typing import List, Tuple
 
 import numpy as np
 
-
 DEFAULTS = dict(
-    alpha         = 0.1,
-    gamma         = 0.95,
-    epsilon       = 1.0,
-    epsilon_min   = 0.05,
-    epsilon_decay = 0.9995,
-    n_deliveries  = 11,   # action space = ALL_DELIVERIES
+    alpha=0.1,
+    gamma=0.95,
+    epsilon=1.0,
+    epsilon_min=0.05,
+    epsilon_decay=0.9995,
+    n_deliveries=11,  # action space = ALL_DELIVERIES
     # state discretisation bins
-    n_wickets     = 11,
-    n_balls_bins  = 6,
-    n_score_bins  = 6,
-    n_economy     = 4,
-    n_phase       = 4,
-    n_pressure    = 2,
+    n_wickets=11,
+    n_balls_bins=6,
+    n_score_bins=6,
+    n_economy=4,
+    n_phase=4,
+    n_pressure=2,
 )
 
 
@@ -48,12 +47,12 @@ class BowlerAgent:
     def __init__(self, n_actions: int = 11, **kwargs):
         cfg = {**DEFAULTS, **kwargs, "n_deliveries": n_actions}
 
-        self.alpha         = cfg["alpha"]
-        self.gamma         = cfg["gamma"]
-        self.epsilon       = cfg["epsilon"]
-        self.epsilon_min   = cfg["epsilon_min"]
+        self.alpha = cfg["alpha"]
+        self.gamma = cfg["gamma"]
+        self.epsilon = cfg["epsilon"]
+        self.epsilon_min = cfg["epsilon_min"]
         self.epsilon_decay = cfg["epsilon_decay"]
-        self.n_actions     = n_actions
+        self.n_actions = n_actions
 
         self._n_wk = cfg["n_wickets"]
         self._n_bl = cfg["n_balls_bins"]
@@ -63,12 +62,16 @@ class BowlerAgent:
         self._n_pr = cfg["n_pressure"]
 
         shape = (
-            self._n_wk, self._n_bl, self._n_sc,
-            self._n_ec, self._n_ph, self._n_pr,
+            self._n_wk,
+            self._n_bl,
+            self._n_sc,
+            self._n_ec,
+            self._n_ph,
+            self._n_pr,
             self.n_actions,
         )
         self.q_table: np.ndarray = np.zeros(shape, dtype=np.float32)
-        self.total_steps  = 0
+        self.total_steps = 0
         self.total_reward = 0.0
 
     # ------------------------------------------------------------------
@@ -97,27 +100,30 @@ class BowlerAgent:
 
     def update(
         self,
-        state:          List[float],
-        action:         int,
-        reward:         float,
-        next_state:     List[float],
-        done:           bool,
+        state: List[float],
+        action: int,
+        reward: float,
+        next_state: List[float],
+        done: bool,
         available_next: List[int],
     ) -> None:
         if action >= self.n_actions:
             return
-        s  = self._discretise(state)
+        s = self._discretise(state)
         s2 = self._discretise(next_state)
 
         current_q = self.q_table[s][action]
         if done or not available_next:
             target_q = reward
         else:
-            best = max(available_next, key=lambda a: self.q_table[s2][a] if a < self.n_actions else -999)
+            best = max(
+                available_next,
+                key=lambda a: self.q_table[s2][a] if a < self.n_actions else -999,
+            )
             target_q = reward + self.gamma * self.q_table[s2][best]
 
         self.q_table[s][action] += self.alpha * (target_q - current_q)
-        self.total_steps  += 1
+        self.total_steps += 1
         self.total_reward += reward
         self._decay_epsilon()
 
@@ -151,12 +157,12 @@ class BowlerAgent:
         """
         wickets, bl, sc, eco, phase, pressure = state
 
-        wk  = int(min(wickets, self._n_wk - 1))
-        bl_ = int(min(bl,      self._n_bl - 1))
-        sc_ = int(min(sc,      self._n_sc - 1))
+        wk = int(min(wickets, self._n_wk - 1))
+        bl_ = int(min(bl, self._n_bl - 1))
+        sc_ = int(min(sc, self._n_sc - 1))
         # economy → 4 buckets: 0-6, 6-9, 9-12, 12+
         ec_ = min(int(eco / 3), self._n_ec - 1)
-        ph_ = int(min(phase,    self._n_ph - 1))
+        ph_ = int(min(phase, self._n_ph - 1))
         pr_ = int(min(pressure, self._n_pr - 1))
         return (wk, bl_, sc_, ec_, ph_, pr_)
 

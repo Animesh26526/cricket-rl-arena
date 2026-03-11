@@ -24,26 +24,26 @@ class Player:
         """
         if not 0.0 <= skill <= 1.0:
             raise ValueError(f"skill must be 0.0–1.0, got {skill}")
-        self.name  = name
+        self.name = name
         self.skill = skill
 
         # batting stats
-        self.runs:    int   = 0
-        self.balls:   int   = 0
-        self.fours:   int   = 0
-        self.sixes:   int   = 0
+        self.runs: int = 0
+        self.balls: int = 0
+        self.fours: int = 0
+        self.sixes: int = 0
         self.strike_rate: float = 0.0
         self.dismissed: bool = False
         self.wicket_taking_bowler_name: str = ""
         self.how_out: str = ""
 
         # bowling stats
-        self.wickets:       int = 0
-        self.balls_bowled:  int = 0
+        self.wickets: int = 0
+        self.balls_bowled: int = 0
         self.runs_conceded: int = 0
 
     def add_runs(self, runs: int) -> None:
-        self.runs  += runs
+        self.runs += runs
         self.balls += 1
         if self.balls > 0:
             self.strike_rate = round((self.runs / self.balls) * 100, 2)
@@ -59,7 +59,9 @@ class Player:
 
     def __str__(self) -> str:
         marker = "" if not self.dismissed else " "
-        return f"{self.name} - {self.runs}({self.balls}){marker}  S/R: {self.strike_rate}"
+        return (
+            f"{self.name} - {self.runs}({self.balls}){marker}  S/R: {self.strike_rate}"
+        )
 
     def __repr__(self) -> str:
         return f"Player(name={self.name!r}, skill={self.skill})"

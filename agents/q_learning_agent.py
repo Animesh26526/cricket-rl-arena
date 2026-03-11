@@ -19,21 +19,20 @@ from typing import List, Tuple
 
 import numpy as np
 
-
 DEFAULTS = dict(
-    alpha         = 0.1,
-    gamma         = 0.95,
-    epsilon       = 1.0,
-    epsilon_min   = 0.05,
-    epsilon_decay = 0.9995,
-    n_deliveries  = 11,
-    n_stumps      = 2,
-    n_wickets     = 11,
-    n_balls_bins  = 6,
-    n_rrr_bins    = 5,    # required run rate buckets
-    n_crr_bins    = 4,    # current run rate buckets
-    n_pressure    = 5,    # runs_required buckets
-    n_actions     = 14,
+    alpha=0.1,
+    gamma=0.95,
+    epsilon=1.0,
+    epsilon_min=0.05,
+    epsilon_decay=0.9995,
+    n_deliveries=11,
+    n_stumps=2,
+    n_wickets=11,
+    n_balls_bins=6,
+    n_rrr_bins=5,  # required run rate buckets
+    n_crr_bins=4,  # current run rate buckets
+    n_pressure=5,  # runs_required buckets
+    n_actions=14,
 )
 
 
@@ -48,29 +47,34 @@ class QLearningAgent:
     def __init__(self, n_actions: int = DEFAULTS["n_actions"], **kwargs):
         cfg = {**DEFAULTS, **kwargs, "n_actions": n_actions}
 
-        self.alpha         = cfg["alpha"]
-        self.gamma         = cfg["gamma"]
-        self.epsilon       = cfg["epsilon"]
-        self.epsilon_min   = cfg["epsilon_min"]
+        self.alpha = cfg["alpha"]
+        self.gamma = cfg["gamma"]
+        self.epsilon = cfg["epsilon"]
+        self.epsilon_min = cfg["epsilon_min"]
         self.epsilon_decay = cfg["epsilon_decay"]
-        self.n_actions     = n_actions
+        self.n_actions = n_actions
 
-        self._n_del  = cfg["n_deliveries"]
-        self._n_st   = cfg["n_stumps"]
-        self._n_wk   = cfg["n_wickets"]
-        self._n_bl   = cfg["n_balls_bins"]
-        self._n_rrr  = cfg["n_rrr_bins"]
-        self._n_crr  = cfg["n_crr_bins"]
-        self._n_pr   = cfg["n_pressure"]
+        self._n_del = cfg["n_deliveries"]
+        self._n_st = cfg["n_stumps"]
+        self._n_wk = cfg["n_wickets"]
+        self._n_bl = cfg["n_balls_bins"]
+        self._n_rrr = cfg["n_rrr_bins"]
+        self._n_crr = cfg["n_crr_bins"]
+        self._n_pr = cfg["n_pressure"]
 
         shape = (
-            self._n_del, self._n_st, self._n_wk,
-            self._n_bl, self._n_rrr, self._n_crr,
-            self._n_pr, self.n_actions,
+            self._n_del,
+            self._n_st,
+            self._n_wk,
+            self._n_bl,
+            self._n_rrr,
+            self._n_crr,
+            self._n_pr,
+            self.n_actions,
         )
         self.q_table: np.ndarray = np.zeros(shape, dtype=np.float32)
 
-        self.total_steps  = 0
+        self.total_steps = 0
         self.total_reward = 0.0
 
     # ------------------------------------------------------------------
@@ -83,21 +87,25 @@ class QLearningAgent:
         # ε-greedy exploration
         if random.random() < self.epsilon:
             return random.choice(available_actions)
-        s     = self._discretise(state)
+        s = self._discretise(state)
         q_row = self.q_table[s]
         # pick uniformly among the best actions so behaviour is less deterministic
         best_val = max(q_row[a] for a in available_actions if a < len(q_row))
-        best_actions = [a for a in available_actions if a < len(q_row) and q_row[a] == best_val]
+        best_actions = [
+            a for a in available_actions if a < len(q_row) and q_row[a] == best_val
+        ]
         return random.choice(best_actions)
 
     def greedy_action(self, state: List[float], available_actions: List[int]) -> int:
         """Pure greedy — used during evaluation but still randomize ties."""
         if not available_actions:
             return 0
-        s     = self._discretise(state)
+        s = self._discretise(state)
         q_row = self.q_table[s]
         best_val = max(q_row[a] for a in available_actions if a < len(q_row))
-        best_actions = [a for a in available_actions if a < len(q_row) and q_row[a] == best_val]
+        best_actions = [
+            a for a in available_actions if a < len(q_row) and q_row[a] == best_val
+        ]
         return random.choice(best_actions)
 
     # ------------------------------------------------------------------
@@ -106,16 +114,16 @@ class QLearningAgent:
 
     def update(
         self,
-        state:          List[float],
-        action:         int,
-        reward:         float,
-        next_state:     List[float],
-        done:           bool,
+        state: List[float],
+        action: int,
+        reward: float,
+        next_state: List[float],
+        done: bool,
         available_next: List[int],
     ) -> None:
         if action >= self.n_actions:
             return
-        s  = self._discretise(state)
+        s = self._discretise(state)
         s2 = self._discretise(next_state)
 
         current_q = self.q_table[s][action]
@@ -129,7 +137,7 @@ class QLearningAgent:
             target_q = reward + self.gamma * self.q_table[s2][best_next]
 
         self.q_table[s][action] += self.alpha * (target_q - current_q)
-        self.total_steps  += 1
+        self.total_steps += 1
         self.total_reward += reward
         self._decay_epsilon()
 
@@ -166,9 +174,9 @@ class QLearningAgent:
         d_idx, st_idx, wk, balls_rem, runs_req, crr, rrr = state
 
         # delivery (0-10)
-        d  = int(min(d_idx,  self._n_del - 1))
+        d = int(min(d_idx, self._n_del - 1))
         # stumps (0-1)
-        st = int(min(st_idx, self._n_st  - 1))
+        st = int(min(st_idx, self._n_st - 1))
         # wickets remaining (0-10)
         wk_b = int(min(wk, self._n_wk - 1))
         # balls remaining → 6 buckets  (0-20, 20-40, …, 100+)
