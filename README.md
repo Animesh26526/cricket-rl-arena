@@ -9,6 +9,16 @@
 
 ---
 
+## 🎬 Demo
+
+![Training Reward](docs/reward_curve.png)
+![Terminal Match](docs/match_output.png)
+![Strategy Heatmap](docs/strategy_heatmap.png)
+
+*Training reward graph, terminal match output, and strategy visualization.*
+
+---
+
 ## 🎯 Project Highlights
 
 A complete RL-powered cricket simulator demonstrating:
@@ -29,6 +39,19 @@ A complete RL-powered cricket simulator demonstrating:
 | **Testing** | unittest, pytest, pytest-cov |
 | **Code Quality** | Black, isort, flake8, mypy |
 | **CI/CD** | GitHub Actions |
+
+---
+
+## 🧠 Why Reinforcement Learning?
+
+Cricket is fundamentally a **sequential decision-making problem** under uncertainty. Each delivery presents the batsman and bowler with choices that affect immediate outcomes *and* long-term match results. The game involves:
+
+- **Sequential Decisions**: Every ball is a decision point with cumulative effects
+- **Uncertainty**: Weather, pitch conditions, player form create stochastic environments  
+- **Long-term Rewards**: Strategic decisions (setting fields, targeting batsmen) pay off over overs, not balls
+- **Partial Observability**: Players must act based on incomplete game state information
+
+This project models cricket as a **Markov Decision Process (MDP)** and explores policy learning under stochastic match dynamics. By using Q-Learning and Deep Q-Networks (DQN), we demonstrate how agents can learn optimal batting and bowling strategies through trial and error, maximizing expected returns over complete innings.
 
 ---
 
@@ -60,6 +83,8 @@ python -m venv .venv
 .venv\Scripts\activate  # Windows
 
 # Install dependencies
+pip install -r requirements.txt
+# OR use editable install with dev dependencies
 pip install -e ".[dev]"
 
 # Play a match
@@ -128,6 +153,12 @@ pytest tests/ -v --cov=.
 - State representation for complex game scenarios
 - Balancing exploration vs exploitation in training
 - Implementing comprehensive cricket rules accurately
+
+---
+
+## 🚀 Future Vision
+
+Potential applications include sports analytics, decision optimisation systems, and game AI research.
 
 ---
 

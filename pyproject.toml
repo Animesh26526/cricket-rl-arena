@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "RL-based cricket match simulator with Q-learning and DQN agents"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 authors = [
     {name = "RL Cricket Game Project", email = "cricket.ai.simulator@example.com"},
 ]
@@ -92,7 +92,6 @@ multi_line_output = 3
 line_length = 88
 
 [tool.mypy]
-python_version = "3.9"
 warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false
